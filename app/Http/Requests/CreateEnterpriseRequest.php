@@ -2,17 +2,19 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Foundation\Http\FormRequest;
+use Response;
 
 class CreateEnterpriseRequest extends FormRequest
 {
-	
-		protected function failedValidation(Validator $validator)
-{
-    throw new CustomValidationFail($validator->errors());
-}
+
+    protected function failedValidation(Validator $validator)
+    {
+
+        return response()->json(['errors' => $validator->errors()], 400);
+
+    }
 
     public function authorize()
     {
@@ -24,14 +26,12 @@ class CreateEnterpriseRequest extends FormRequest
     public function messages()
     {
         return [
-            'email' => 'required|email',
             'password' => 'required|string',
             'name' => 'required|string',
             'secondname' => 'required|string',
             'address' => 'string',
             'lastname' => 'required|string',
-            'inn' => 'numeric|max:15',
-            'fincode' => 'required|string|max:8',
+            'inn' => 'numeric|max:10',
         ];
     }
 
@@ -39,14 +39,13 @@ class CreateEnterpriseRequest extends FormRequest
     {
 
         return [
-            'email' => 'required|email',
             'password' => 'required|string',
             'name' => 'required|string',
-            'secondname' => 'required|string',
-            'address' => 'string',
+            'secondname' => 'required|string|nullable',
+            'address' => 'string|nullable',
             'lastname' => 'required|string',
-            'inn' => 'string|max:15',
-            'fincode' => 'required|string|max:8',
+            'inn' => 'numeric|max:10|unique:users|min:10',
+
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateEnterpriseRequest;
 use App\User;
+use App\UserDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -25,20 +26,22 @@ class UsersController extends Controller
 
             $user_details = [
                 'name' => $request->name,
-                'address' => $request->address,
                 'lastname' => $request->lastname,
                 'secondname' => $request->secondname,
                 'inn' => $request->inn,
-                'fincode' => $request->fincode,
+                'address' => $request->address,
+                'user_id' => $user->id,
             ];
 
-            $user->details()->create($user_details);
+            UserDetails::create($user_details);
 
             DB::select('call CopyInvoices(?)', array($user->id));
 
-            $token = JWTAuth::fromUser($user);
-
-            return $this->respondWithToken($token);
+            return response()->json([
+                'access_token' => JWTAuth::fromUser($user),
+                'token_type' => 'bearer',
+                'enterprise' => $user_details,
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['errors' => $e->getMessage()], 400);
@@ -83,8 +86,7 @@ class UsersController extends Controller
     {
 
         $user = JWTAuth::user();
-        $user_details = $user->details()->get()->first();
-        $user_details["email"] = $user["email"];
+        $user_details = UserDetails::where("user_id", JWTAuth::user()->id)->get()->first();
 
         return response()->json([
             'access_token' => $token,

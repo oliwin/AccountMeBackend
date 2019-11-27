@@ -9,5 +9,5 @@ class UserDetails extends Model
 
     protected $table = 'enterprise';
 
-    protected $fillable = ['name', 'lastname', 'secondname', 'address', 'inn', 'fincode'];
+    protected $fillable = ['name', 'lastname', 'secondname', 'address', 'inn', 'user_id'];
 }

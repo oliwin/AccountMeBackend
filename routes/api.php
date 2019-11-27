@@ -48,6 +48,7 @@ Route::group(['middleware' => 'jwt.auth'], function () {
     Route::get('last/transaction', 'TransactionController@getLastIdTransaction');
     Route::get('oputax', 'InvoiceController@oputax');
     Route::get('balancetax', 'InvoiceController@balancetax');
+    Route::get('transaction/delete/{id}', 'TransactionController@delete');
 
     Route::post('invoice/destroy', 'InvoiceController@destroy');
     Route::post('profile', 'ProfileController@update');

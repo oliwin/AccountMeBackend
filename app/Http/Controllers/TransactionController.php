@@ -15,7 +15,7 @@ class TransactionController extends Controller
     {
 
         $collection = DB::table('account_transactions')
-            ->select('account_transactions.*', DB::raw("ABS(SUM(IF(AT_amount>0, AT_amount, 0))) AS debit, ABS(SUM(IF(AT_amount<0, AT_amount, 0))) AS credit"), 'transactions_type.name AS typeName', 'enterprise_invoces.AC_name')
+            ->select('account_transactions.*', DB::raw("enterprise_invoces.AC_code AS AT_code, ABS(SUM(IF(AT_amount>0, AT_amount, 0))) AS debit, ABS(SUM(IF(AT_amount<0, AT_amount, 0))) AS credit"), 'transactions_type.name AS typeName', 'enterprise_invoces.AC_name')
             ->where('AT_createuser', JWTAuth::user()->id)
             ->groupBy('AT_transactionficheno')
             ->leftJoin('enterprise_invoces', 'enterprise_invoces.AC_id', '=', 'account_transactions.AT_code')
@@ -92,7 +92,6 @@ class TransactionController extends Controller
     {
 
         $lastTransaction = Transactions::latest()->first();
-
         $lastTransactionId = $lastTransaction->AT_id + 1;
 
         return response()->json([
@@ -112,16 +111,22 @@ class TransactionController extends Controller
     public function update(Request $request, $id)
     {
         $request = $request->toArray();
+        //dd($request);
         $transactions = $request['transactions'];
         $common = $request['common'];
 
         foreach ($transactions as $k => $value) {
             if (!empty($value['id'])) {
                 $updated[] = Transactions::where('AT_id', $value['id'])->update([
-                    'AT_amount' => $value['amount'],
-                    'AT_transactiondescription' => $value['remark'],
+                    'AT_amount' => $value['debit'] ? -$value['debit'] : $value['credit'],
+                    'AT_transactiondescription' => $value['remark'] ? $value['remark'] : null,
                     'AT_type' => $common['type'],
+                    'AT_oputax_id' => $value['AT_oputax_id'],
                     'AT_lastupdateuser' => date('Y'),
+                    'AT_transactiondatetime' => $common['date'],
+                    'AT_balance_tax_type_id' => $value['AT_balance_tax_type_id'],
+                    'AT_balance_tax_id' => $value['AT_balance_tax_id'],
+                    'AT_code' => $value['invoice']['AC_id']
                 ]);
             }
         }
@@ -147,9 +152,9 @@ class TransactionController extends Controller
         return response()->json(["id" => $id]);
     }
 
-    public function destroy($id)
+    public function delete($id)
     {
-        $transaction = Transactions::findOrFail($id)->delete();
+        $transaction = Transactions::where('AT_transactionficheno', $id)->delete();
 
         return response()->json($transaction);
     }
